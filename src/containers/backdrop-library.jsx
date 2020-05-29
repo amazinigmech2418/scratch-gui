@@ -1,10 +1,20 @@
 import bindAll from 'lodash.bindall';
 import PropTypes from 'prop-types';
 import React from 'react';
+import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import VM from 'scratch-vm';
 
 import backdropLibraryContent from '../lib/libraries/backdrops.json';
+import backdropTags from '../lib/libraries/backdrop-tags';
 import LibraryComponent from '../components/library/library.jsx';
+
+const messages = defineMessages({
+    libraryTitle: {
+        defaultMessage: 'Choose a Backdrop',
+        description: 'Heading for the backdrop library',
+        id: 'gui.costumeLibrary.chooseABackdrop'
+    }
+});
 
 
 class BackdropLibrary extends React.Component {
@@ -22,17 +32,16 @@ class BackdropLibrary extends React.Component {
             bitmapResolution: item.info.length > 2 ? item.info[2] : 1,
             skinId: null
         };
-        this.props.vm.addBackdrop(item.md5, vmBackdrop).then(() => {
-            if (this.props.onNewBackdrop) {
-                this.props.onNewBackdrop();
-            }
-        });
+        // Do not switch to stage, just add the backdrop
+        this.props.vm.addBackdrop(item.md5, vmBackdrop);
     }
     render () {
         return (
             <LibraryComponent
                 data={backdropLibraryContent}
-                title="Backdrop Library"
+                id="backdropLibrary"
+                tags={backdropTags}
+                title={this.props.intl.formatMessage(messages.libraryTitle)}
                 onItemSelected={this.handleItemSelect}
                 onRequestClose={this.props.onRequestClose}
             />
@@ -41,9 +50,9 @@ class BackdropLibrary extends React.Component {
 }
 
 BackdropLibrary.propTypes = {
-    onNewBackdrop: PropTypes.func,
+    intl: intlShape.isRequired,
     onRequestClose: PropTypes.func,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 
-export default BackdropLibrary;
+export default injectIntl(BackdropLibrary);

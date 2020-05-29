@@ -2,8 +2,8 @@ import bindAll from 'lodash.bindall';
 import PropTypes from 'prop-types';
 import React from 'react';
 import VM from 'scratch-vm';
-import WavEncoder from 'wav-encoder';
 import {connect} from 'react-redux';
+import {encodeAndAddSoundToVM} from '../lib/audio/audio-util.js';
 
 import RecordModalComponent from '../components/record-modal/record-modal.jsx';
 
@@ -43,7 +43,9 @@ class RecordModal extends React.Component {
         this.setState({recording: true});
     }
     handleStopRecording (samples, sampleRate, levels, trimStart, trimEnd) {
-        this.setState({samples, sampleRate, levels, trimStart, trimEnd, recording: false});
+        if (samples.length > 0) {
+            this.setState({samples, sampleRate, levels, trimStart, trimEnd, recording: false});
+        }
     }
     handlePlay () {
         this.setState({playing: true});
@@ -69,31 +71,12 @@ class RecordModal extends React.Component {
             const startIndex = Math.floor(this.state.trimStart * sampleCount);
             const endIndex = Math.floor(this.state.trimEnd * sampleCount);
             const clippedSamples = this.state.samples.slice(startIndex, endIndex);
-            WavEncoder.encode({
-                sampleRate: this.state.sampleRate,
-                channelData: [clippedSamples]
-            }).then(wavBuffer => {
-                const md5 = String(Math.floor(100000 * Math.random()));
-                const vmSound = {
-                    format: '',
-                    md5: `${md5}.wav`,
-                    name: `recording ${this.props.vm.editingTarget.sprite.sounds.length}`
-                };
 
-                // Load the encoded .wav into the storage cache
-                const storage = this.props.vm.runtime.storage;
-                storage.builtinHelper.cache(
-                    storage.AssetType.Sound,
-                    storage.DataFormat.WAV,
-                    new Uint8Array(wavBuffer),
-                    md5
-                );
-
-                this.props.vm.addSound(vmSound).then(() => {
+            encodeAndAddSoundToVM(this.props.vm, clippedSamples, this.state.sampleRate, 'recording1',
+                () => {
                     this.props.onClose();
                     this.props.onNewSound();
                 });
-            });
         });
     }
     handleCancel () {
@@ -133,7 +116,7 @@ RecordModal.propTypes = {
 };
 
 const mapStateToProps = state => ({
-    vm: state.vm
+    vm: state.scratchGui.vm
 });
 
 const mapDispatchToProps = dispatch => ({
