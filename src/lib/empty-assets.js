@@ -57,8 +57,8 @@ const emptySprite = (name, soundName, costumeName) => ({
         }
     ],
     currentCostume: 0,
-    x: 36,
-    y: 28,
+    x: Math.round(480 * (Math.random() - 0.5)),
+    y: Math.round(360 * (Math.random() - 0.5)),
     size: 100,
     direction: 90,
     rotationStyle: 'all around',
